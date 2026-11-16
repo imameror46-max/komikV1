@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Unzip project (jika ada)
+        run: |
+          if [ -f PromptKomik.zip ]; then unzip -q -o PromptKomik.zip; fi
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -18,8 +21,14 @@ jobs:
         with:
           gradle-version: 8.5
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon
+        run: |
+          ls -R | head -40
+          FILE=$(find . -name settings.gradle.kts | head -n1)
+          if [ -z "$FILE" ]; then echo "settings.gradle.kts tidak ditemukan"; exit 1; fi
+          cd "$(dirname "$FILE")"
+          echo "Proyek ada di: $(pwd)"
+          gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: PromptKomik-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: "**/build/outputs/apk/debug/*.apk"
